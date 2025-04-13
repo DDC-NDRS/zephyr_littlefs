@@ -510,7 +510,7 @@ static inline void lfs_superblock_tole32(lfs_superblock_t *superblock) {
 #endif
 
 #ifndef LFS_NO_ASSERT
-#if __ASSERT_ON
+#if (__ASSERT_ON || defined(_MSC_VER)) /* #CUSTOM@NDRS */
 static bool lfs_mlist_isopen(struct lfs_mlist *head,
         struct lfs_mlist *node) {
     for (struct lfs_mlist **p = &head; *p; p = &(*p)->next) {
@@ -1432,7 +1432,7 @@ static int lfs_dir_getinfo(lfs_t *lfs, lfs_mdir_t *dir,
         return (int)tag;
     }
 
-    info->type = lfs_tag_type3(tag);
+    info->type = (uint8_t)lfs_tag_type3(tag);
 
     struct lfs_ctz ctz;
     tag = lfs_dir_get(lfs, dir, LFS_MKTAG(0x700, 0x3ff, 0),
@@ -2146,7 +2146,7 @@ static int lfs_dir_splittingcompact(lfs_t *lfs, lfs_mdir_t *dir,
                     source, 0, 0xffffffff, attrs, attrcount,
                     LFS_MKTAG(0x400, 0x3ff, 0),
                     LFS_MKTAG(LFS_TYPE_NAME, 0, 0),
-                    split, end, -split,
+                    split, end, ((int16_t)split * -1),
                     lfs_dir_commit_size, &size);
             if (err) {
                 return err;
@@ -2563,7 +2563,7 @@ static int lfs_dir_orphaningcommit(lfs_t *lfs, lfs_mdir_t *dir,
         if (err != LFS_ERR_NOENT) {
             if (lfs_gstate_hasorphans(&lfs->gstate)) {
                 // next step, clean up orphans
-                err = lfs_fs_preporphans(lfs, -hasparent);
+                err = lfs_fs_preporphans(lfs, -(int8_t)hasparent);
                 if (err) {
                     return err;
                 }
